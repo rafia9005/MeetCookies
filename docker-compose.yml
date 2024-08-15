@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  app:
+    image: node:latest
+    container_name: meetpookiebe
+    working_dir: /usr/src/app
+    volumes:
+      - .:/usr/src/app
+    ports:
+      - "3000:3000"
+    command: ["npm", "run", "start:prod"]
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=mysql://meetpookie:meetpookie@db:3306/meetpookie
+    networks:
+      - app-network
+
+  db:
+    image: mysql:latest
+    container_name: meetpookie-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_USER: meetpookie
+      MYSQL_PASSWORD: meetpookie
+      MYSQL_DATABASE: meetpookie
+    ports:
+      - "3306:3306"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
