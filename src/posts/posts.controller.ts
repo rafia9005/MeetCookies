@@ -6,6 +6,11 @@ import {
   Patch,
   Param,
   Delete,
+  HttpCode,
+  HttpStatus,
+  NotFoundException,
+  ConflictException,
+  HttpException,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostsDto } from './dto/posts.dto';
@@ -16,30 +21,97 @@ export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
   @Post()
-  create(@Body() createPostDto: CreatePostsDto) {
-    return this.postsService.create(createPostDto);
+  @HttpCode(HttpStatus.CREATED)
+  async create(@Body() createPostDto: CreatePostsDto) {
+    try {
+      const result = await this.postsService.create(createPostDto);
+      return {
+        status: true,
+        statusCode: HttpStatus.CREATED,
+        data: result.data,
+      };
+    } catch (error) {
+      if (error instanceof ConflictException) {
+        throw new ConflictException(error.message);
+      }
+      throw new ConflictException('Failed to create post.');
+    }
   }
 
   @Get()
-  findAll() {
-    return this.postsService.findAll();
+  @HttpCode(HttpStatus.OK)
+  async findAll() {
+    try {
+      const result = await this.postsService.findAll();
+      return {
+        status: true,
+        statusCode: HttpStatus.OK,
+        data: result.data,
+      };
+    } catch (error) {
+      throw new HttpException(
+        'Failed to retrieve posts',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.postsService.findOne(+id);
+  @HttpCode(HttpStatus.OK)
+  async findOne(@Param('id') id: string) {
+    try {
+      const result = await this.postsService.findOne(+id);
+      if (!result.data) {
+        throw new NotFoundException('Post not found');
+      }
+      return result;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message);
+      }
+      throw new HttpException(
+        'Failed to retrieve post',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Patch(':id')
-  update(
+  @HttpCode(HttpStatus.OK)
+  async update(
     @Param('id') id: string,
     @Body() updatePostDto: Prisma.PostUpdateInput,
   ) {
-    return this.postsService.update(+id, updatePostDto);
+    try {
+      const result = await this.postsService.update(+id, updatePostDto);
+      return {
+        status: true,
+        statusCode: HttpStatus.OK,
+        data: result.data,
+      };
+    } catch (error) {
+      throw new HttpException(
+        'Failed to update post',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.postsService.remove(+id);
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(@Param('id') id: string) {
+    try {
+      await this.postsService.remove(+id);
+      return {
+        status: true,
+        statusCode: HttpStatus.NO_CONTENT,
+        message: 'Post successfully deleted',
+      };
+    } catch (error) {
+      throw new HttpException(
+        'Failed to remove post',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }

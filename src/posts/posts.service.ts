@@ -1,32 +1,38 @@
-import {
-  ConflictException,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { DatabaseService } from 'src/database/database.service';
 
 @Injectable()
 export class PostsService {
   constructor(private readonly Db: DatabaseService) {}
+
   async create(createPostDto: Prisma.PostCreateInput) {
     try {
-      return await this.Db.post.create({
+      const post = await this.Db.post.create({
         data: createPostDto,
         include: {
           LikePost: true,
           CommentPost: true,
         },
       });
+      return {
+        status: true,
+        statusCode: HttpStatus.CREATED,
+        data: post,
+      };
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === 'P2002'
       ) {
-        throw new ConflictException('Posts with the same name already exists.');
+        throw new HttpException(
+          'Posts with the same name already exists.',
+          HttpStatus.CONFLICT,
+        );
       } else {
-        throw new InternalServerErrorException(
-          'An unexpected error occurred while creating the product.',
+        throw new HttpException(
+          'An unexpected error occurred while creating the post.',
+          HttpStatus.INTERNAL_SERVER_ERROR,
         );
       }
     }
@@ -41,63 +47,89 @@ export class PostsService {
         },
       });
 
-      return posts.map((post) => ({
-        id: post.id,
-        content: post.content,
-        like: post.LikePost,
-        comment: post.CommentPost,
-        created_at: post.created_at,
-        updated_at: post.updated_at,
-      }));
+      return {
+        status: true,
+        statusCode: HttpStatus.OK,
+        data: posts.map((post) => ({
+          id: post.id,
+          content: post.content,
+          like: post.LikePost,
+          comment: post.CommentPost,
+          created_at: post.created_at,
+          updated_at: post.updated_at,
+        })),
+      };
     } catch (error) {
-      throw new InternalServerErrorException('Failed to retrieve posts');
+      throw new HttpException(
+        'Failed to retrieve posts',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
   async findOne(id: number) {
     try {
-      const posts = await this.Db.post.findUnique({
-        where: {
-          id,
+      const post = await this.Db.post.findUnique({
+        where: { id },
+        include: {
+          LikePost: true,
+          CommentPost: true,
         },
       });
 
-      if (!posts) {
-        return {
-          status: false,
-          statusCode: 404,
-          message: 'posts not found in id : ${id}',
-        };
-      } else {
-        return posts;
+      if (!post) {
+        throw new HttpException('Post not found', HttpStatus.NOT_FOUND);
       }
+
+      return {
+        status: true,
+        statusCode: HttpStatus.OK,
+        data: post,
+      };
     } catch (error) {
-      throw new InternalServerErrorException('Failed to retrieve posts');
+      throw new HttpException(
+        'Failed to retrieve post',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
   async update(id: number, updatePostDto: Prisma.PostUpdateInput) {
     try {
-      return await this.Db.post.update({
-        where: {
-          id,
-        },
+      const updatedPost = await this.Db.post.update({
+        where: { id },
         data: updatePostDto,
       });
+
+      return {
+        status: true,
+        statusCode: HttpStatus.OK,
+        data: updatedPost,
+      };
     } catch (error) {
-      throw new InternalServerErrorException('Failed to update posts');
+      throw new HttpException(
+        'Failed to update post',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
   async remove(id: number) {
     try {
-      return await this.Db.post.delete({
-        where: {
-          id,
-        },
+      await this.Db.post.delete({
+        where: { id },
       });
+
+      return {
+        status: true,
+        statusCode: HttpStatus.NO_CONTENT,
+        message: 'Post successfully deleted',
+      };
     } catch (error) {
-      throw new InternalServerErrorException('Failed to remove posts');
+      throw new HttpException(
+        'Failed to remove post',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }
