@@ -8,11 +8,43 @@ datasource db {
 }
 
 model User {
-  id       Int     @id @default(autoincrement())
-  username String  @unique
-  email    String  @unique
-  password String
-  token    String?
+  id          Int           @id @default(autoincrement())
+  username    String        @unique
+  email       String        @unique
+  password    String
+  token       String?
+  LikePost    LikePost[]
+  CommentPost CommentPost[]
 
   @@map("users")
+}
+
+model Post {
+  id          Int           @id @default(autoincrement())
+  content     String        @db.Text()
+  LikePost    LikePost[]
+  CommentPost CommentPost[]
+
+  @@map("posts")
+}
+
+model LikePost {
+  id    Int  @id @default(autoincrement())
+  user  User @relation(fields: [users], references: [id])
+  users Int
+  post  Post @relation(fields: [posts], references: [id])
+  posts Int
+
+  @@map("like_posts")
+}
+
+model CommentPost {
+  id      Int    @id @default(autoincrement())
+  content String @db.Text()
+  user    User   @relation(fields: [users], references: [id])
+  users   Int
+  post    Post   @relation(fields: [posts], references: [id])
+  posts   Int
+
+  @@map("comment_posts")
 }
