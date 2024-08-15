@@ -1,0 +1,135 @@
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { DatabaseService } from 'src/database/database.service';
+
+@Injectable()
+export class PostsService {
+  constructor(private readonly Db: DatabaseService) {}
+
+  async create(createPostDto: Prisma.PostCreateInput) {
+    try {
+      const post = await this.Db.post.create({
+        data: createPostDto,
+        include: {
+          LikePost: true,
+          CommentPost: true,
+        },
+      });
+      return {
+        status: true,
+        statusCode: HttpStatus.CREATED,
+        data: post,
+      };
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new HttpException(
+          'Posts with the same name already exists.',
+          HttpStatus.CONFLICT,
+        );
+      } else {
+        throw new HttpException(
+          'An unexpected error occurred while creating the post.',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+    }
+  }
+
+  async findAll() {
+    try {
+      const posts = await this.Db.post.findMany({
+        include: {
+          LikePost: true,
+          CommentPost: true,
+        },
+      });
+
+      return {
+        status: true,
+        statusCode: HttpStatus.OK,
+        data: posts.map((post) => ({
+          id: post.id,
+          content: post.content,
+          like: post.LikePost,
+          comment: post.CommentPost,
+          created_at: post.created_at,
+          updated_at: post.updated_at,
+        })),
+      };
+    } catch (error) {
+      throw new HttpException(
+        'Failed to retrieve posts',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async findOne(id: number) {
+    try {
+      const post = await this.Db.post.findUnique({
+        where: { id },
+        include: {
+          LikePost: true,
+          CommentPost: true,
+        },
+      });
+
+      if (!post) {
+        throw new HttpException('Post not found', HttpStatus.NOT_FOUND);
+      }
+
+      return {
+        status: true,
+        statusCode: HttpStatus.OK,
+        data: post,
+      };
+    } catch (error) {
+      throw new HttpException(
+        'Failed to retrieve post',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async update(id: number, updatePostDto: Prisma.PostUpdateInput) {
+    try {
+      const updatedPost = await this.Db.post.update({
+        where: { id },
+        data: updatePostDto,
+      });
+
+      return {
+        status: true,
+        statusCode: HttpStatus.OK,
+        data: updatedPost,
+      };
+    } catch (error) {
+      throw new HttpException(
+        'Failed to update post',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async remove(id: number) {
+    try {
+      await this.Db.post.delete({
+        where: { id },
+      });
+
+      return {
+        status: true,
+        statusCode: HttpStatus.NO_CONTENT,
+        message: 'Post successfully deleted',
+      };
+    } catch (error) {
+      throw new HttpException(
+        'Failed to remove post',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+}
