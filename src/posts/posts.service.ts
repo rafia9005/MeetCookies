@@ -1,26 +1,103 @@
-import { Injectable } from '@nestjs/common';
-import { CreatePostDto } from './dto/create-post.dto';
-import { UpdatePostDto } from './dto/update-post.dto';
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { DatabaseService } from 'src/database/database.service';
 
 @Injectable()
 export class PostsService {
-  create(createPostDto: CreatePostDto) {
-    return 'This action adds a new post';
+  constructor(private readonly Db: DatabaseService) {}
+  async create(createPostDto: Prisma.PostCreateInput) {
+    try {
+      return await this.Db.post.create({
+        data: createPostDto,
+        include: {
+          LikePost: true,
+          CommentPost: true,
+        },
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException('Posts with the same name already exists.');
+      } else {
+        throw new InternalServerErrorException(
+          'An unexpected error occurred while creating the product.',
+        );
+      }
+    }
   }
 
-  findAll() {
-    return `This action returns all posts`;
+  async findAll() {
+    try {
+      const posts = await this.Db.post.findMany({
+        include: {
+          LikePost: true,
+          CommentPost: true,
+        },
+      });
+
+      return posts.map((post) => ({
+        id: post.id,
+        content: post.content,
+        like: post.LikePost,
+        comment: post.CommentPost,
+        created_at: post.created_at,
+        updated_at: post.updated_at,
+      }));
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to retrieve posts');
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} post`;
+  async findOne(id: number) {
+    try {
+      const posts = await this.Db.post.findUnique({
+        where: {
+          id,
+        },
+      });
+
+      if (!posts) {
+        return {
+          status: false,
+          statusCode: 404,
+          message: 'posts not found in id : ${id}',
+        };
+      } else {
+        return posts;
+      }
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to retrieve posts');
+    }
   }
 
-  update(id: number, updatePostDto: UpdatePostDto) {
-    return `This action updates a #${id} post`;
+  async update(id: number, updatePostDto: Prisma.PostUpdateInput) {
+    try {
+      return await this.Db.post.update({
+        where: {
+          id,
+        },
+        data: updatePostDto,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to update posts');
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} post`;
+  async remove(id: number) {
+    try {
+      return await this.Db.post.delete({
+        where: {
+          id,
+        },
+      });
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to remove posts');
+    }
   }
 }

@@ -24,6 +24,8 @@ model Post {
   content     String        @db.Text()
   LikePost    LikePost[]
   CommentPost CommentPost[]
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @updatedAt
 
   @@map("posts")
 }
