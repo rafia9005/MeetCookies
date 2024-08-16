@@ -114,4 +114,28 @@ export class PostsController {
       );
     }
   }
+
+  @Post(':id/like')
+  @HttpCode(HttpStatus.OK)
+  async likePost(
+    @Param('id') postId: string,
+    @Body('userId') userId: number
+  ) {
+    try {
+      await this.postsService.likePosts(+postId, userId);
+      return {
+        status: true,
+        statusCode: HttpStatus.OK,
+        message: 'Post liked successfully',
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message);
+      }
+      throw new HttpException(
+        'Failed to like post',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 }
