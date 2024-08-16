@@ -42,8 +42,12 @@ export class PostsService {
     try {
       const posts = await this.Db.post.findMany({
         include: {
-          LikePost: true,
-          CommentPost: true,
+          _count: {
+            select: {
+              LikePost: true,
+              CommentPost: true,
+            },
+          },
         },
       });
 
@@ -53,8 +57,8 @@ export class PostsService {
         data: posts.map((post) => ({
           id: post.id,
           content: post.content,
-          like: post.LikePost,
-          comment: post.CommentPost,
+          like: post._count.LikePost,
+          comment: post._count.CommentPost,
           created_at: post.created_at,
           updated_at: post.updated_at,
         })),
@@ -72,7 +76,12 @@ export class PostsService {
       const post = await this.Db.post.findUnique({
         where: { id },
         include: {
-          LikePost: true,
+          _count: {
+            select: {
+              LikePost: true,
+              CommentPost: true,
+            },
+          },
           CommentPost: true,
         },
       });
@@ -84,7 +93,15 @@ export class PostsService {
       return {
         status: true,
         statusCode: HttpStatus.OK,
-        data: post,
+        data: {
+          id: post.id,
+          content: post.content,
+          like: post._count.LikePost,
+          comment: post._count.CommentPost,
+          all_comment: post.CommentPost,
+          created_at: post.created_at,
+          updated_at: post.updated_at,
+        },
       };
     } catch (error) {
       throw new HttpException(
@@ -131,5 +148,29 @@ export class PostsService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  async likePosts(postId: number, userId: number) {
+    const [user, post] = await Promise.all([
+      this.Db.user.findUnique({ where: { id: userId } }),
+      this.Db.post.findUnique({ where: { id: postId } }),
+    ]);
+
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+
+    if (!post) {
+      throw new HttpException('Post not found', HttpStatus.NOT_FOUND);
+    }
+
+    await this.Db.likePost.create({
+      data: {
+        user: { connect: { id: userId } },
+        post: { connect: { id: postId } },
+      },
+    });
+
+    return { status: true };
   }
 }
