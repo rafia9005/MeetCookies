@@ -1,3 +1,4 @@
+
 Here's a ROUTING.md document for the PostsController based on the provided code:
 Routing Documentation
 Endpoints for Managing Posts
@@ -8,17 +9,18 @@ Endpoints for Managing Posts
     Description: Creates a new post.
     Request Body:
 
-    json
+```json
 
 {
   "content": "string"
 }
+```
 
 Responses:
 
     201 Created:
 
-    json
+```json
 
 {
   "status": true,
@@ -30,17 +32,18 @@ Responses:
     "updated_at": "ISO8601 timestamp"
   }
 }
+```
 
 409 Conflict:
 
-json
+```json
 
-        {
-          "status": false,
-          "statusCode": 409,
-          "message": "Failed to create post."
-        }
-
+    {
+        "status": false,
+        "statusCode": 409,
+        "message": "Failed to create post."
+    }
+```
 2. Get All Posts
 
     URL: /api/posts
@@ -49,8 +52,7 @@ json
     Responses:
         200 OK:
 
-        json
-
+```json
 {
   "status": true,
   "statusCode": 200,
@@ -65,16 +67,17 @@ json
     }
   ]
 }
+```
 
 500 Internal Server Error:
 
-json
-
-        {
-          "status": false,
-          "statusCode": 500,
-          "message": "Failed to retrieve posts"
-        }
+```json
+    {
+        "status": false,
+        "statusCode": 500,
+        "message": "Failed to retrieve posts"
+    }
+```
 
 3. Get Single Post
 
@@ -86,7 +89,7 @@ json
     Responses:
         200 OK:
 
-        json
+```json
 
 {
   "status": true,
@@ -100,26 +103,26 @@ json
     "updated_at": "ISO8601 timestamp"
   }
 }
-
+```
 404 Not Found:
 
-json
-
+```json
 {
   "status": false,
   "statusCode": 404,
   "message": "Post not found"
 }
+```
 
 500 Internal Server Error:
 
-json
-
-        {
-          "status": false,
-          "statusCode": 500,
-          "message": "Failed to retrieve post"
-        }
+```json
+    {
+      "status": false,
+      "statusCode": 500,
+      "message": "Failed to retrieve post"
+    }
+```
 
 4. Update Post
 
@@ -130,18 +133,18 @@ json
         id (number): The ID of the post.
     Request Body:
 
-    json
+```json
 
 {
   "content": "string"
 }
+```
 
 Responses:
 
     200 OK:
 
-    json
-
+```json
 {
   "status": true,
   "statusCode": 200,
@@ -152,16 +155,18 @@ Responses:
     "updated_at": "ISO8601 timestamp"
   }
 }
+```
 
 500 Internal Server Error:
 
-json
+```json
 
-        {
-          "status": false,
-          "statusCode": 500,
-          "message": "Failed to update post"
-        }
+    {
+        "status": false,
+        "statusCode": 500,
+        "message": "Failed to update post"
+    }
+```
 
 5. Delete Post
 
@@ -173,23 +178,24 @@ json
     Responses:
         204 No Content:
 
-        json
+```json
 
 {
   "status": true,
   "statusCode": 204,
   "message": "Post successfully deleted"
 }
+```
 
 500 Internal Server Error:
 
-json
-
-        {
-          "status": false,
-          "statusCode": 500,
-          "message": "Failed to remove post"
-        }
+```json
+    {
+        "status": false,
+        "statusCode": 500,
+        "message": "Failed to remove post"
+    }
+```
 
 6. Like Post
 
@@ -200,41 +206,41 @@ json
         id (number): The ID of the post.
     Request Body:
 
-    json
-
+```json
 {
   "userId": "number"
 }
+```
 
 Responses:
 
     200 OK:
 
-    json
-
+```json
 {
   "status": true,
   "statusCode": 200,
   "message": "Post liked successfully"
 }
+```
 
 404 Not Found:
 
-json
-
+```json
 {
   "status": false,
   "statusCode": 404,
   "message": "Post not found"
 }
+```
 
 500 Internal Server Error:
 
-json
-
+```json
 {
   "status": false,
   "statusCode": 500,
   "message": "Failed to like post"
 }
+```
 
