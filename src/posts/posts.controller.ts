@@ -11,10 +11,12 @@ import {
   NotFoundException,
   ConflictException,
   HttpException,
+  Logger,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostsDto } from './dto/posts.dto';
 import { Prisma } from '@prisma/client';
+import { MessagePattern } from '@nestjs/microservices';
 
 @Controller('api/posts')
 export class PostsController {
@@ -137,5 +139,16 @@ export class PostsController {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  @Post('test')
+  @MessagePattern("email")
+  handleTest() {
+    const data = {
+      id: 1,
+      email: "rafia9005@gmail.com",
+      message: "hello world"
+    }
+    Logger.log(this.postsService.sendEmailLike(data))
   }
 }

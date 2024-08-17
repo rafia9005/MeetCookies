@@ -1,10 +1,20 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Inject,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
 import { Prisma } from '@prisma/client';
 import { DatabaseService } from 'src/database/database.service';
 
 @Injectable()
 export class PostsService {
-  constructor(private readonly Db: DatabaseService) {}
+  constructor(
+    private readonly Db: DatabaseService,
+    @Inject('EMAIL_SERVICE') private readonly client: ClientProxy,
+  ) {}
 
   async create(createPostDto: Prisma.PostCreateInput) {
     try {
@@ -172,5 +182,15 @@ export class PostsService {
     });
 
     return { status: true };
+  }
+
+  async sendEmailLike(data: any) {
+    try {
+      const result = await this.client.send('email', data).toPromise();
+      return result;
+    } catch (error) {
+      Logger.log(error);
+      throw new error();
+    }
   }
 }
