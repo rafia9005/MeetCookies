@@ -1,0 +1,29 @@
+name: unit testing
+
+on:
+  push:
+    branches:
+    - main
+    - master
+  pull_request:
+    branches:
+    - main
+    - master
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: setup node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 21.7.1
+      - name: Install Dependencies
+        run: npm ci
+      - name: Run Eslint
+        run: npm run lint
+      - name: Run Unit testing
+        run: npm run test

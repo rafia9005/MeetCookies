@@ -141,14 +141,14 @@ export class PostsController {
     }
   }
 
-  @Post('test')
-  @MessagePattern("email")
-  handleTest() {
-    const data = {
-      id: 1,
-      email: "rafia9005@gmail.com",
-      message: "hello world"
-    }
-    Logger.log(this.postsService.sendEmailLike(data))
-  }
+  //@Post('test')
+  //@MessagePattern("email")
+  //handleTest() {
+  //  const data = {
+  //    id: 1,
+  //    email: "rafia9005@gmail.com",
+  //    message: "hello world"
+  //  }
+  //  Logger.log(this.postsService.sendEmailLike(data))
+  //}
 }

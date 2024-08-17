@@ -184,13 +184,13 @@ export class PostsService {
     return { status: true };
   }
 
-  async sendEmailLike(data: any) {
-    try {
-      const result = await this.client.send('email', data).toPromise();
-      return result;
-    } catch (error) {
-      Logger.log(error);
-      throw new error();
-    }
-  }
+  //async sendEmailLike(data: any) {
+  //  try {
+  //    const result = await this.client.send('email', data).toPromise();
+  //    return result;
+  //  } catch (error) {
+  //    Logger.log(error);
+  //    throw new error();
+  //  }
+  //}
 }
