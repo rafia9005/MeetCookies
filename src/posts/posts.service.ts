@@ -1,10 +1,14 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
 import { Prisma } from '@prisma/client';
 import { DatabaseService } from 'src/database/database.service';
 
 @Injectable()
 export class PostsService {
-  constructor(private readonly Db: DatabaseService) {}
+  constructor(
+    private readonly Db: DatabaseService,
+    @Inject('EMAIL_SERVICE') private readonly client: ClientProxy,
+  ) {}
 
   async create(createPostDto: Prisma.PostCreateInput) {
     try {
@@ -82,7 +86,11 @@ export class PostsService {
               CommentPost: true,
             },
           },
-          CommentPost: true,
+          CommentPost: {
+            include: {
+              user: true,
+            },
+          },
         },
       });
 
@@ -98,7 +106,14 @@ export class PostsService {
           content: post.content,
           like: post._count.LikePost,
           comment: post._count.CommentPost,
-          all_comment: post.CommentPost,
+          all_comment: post.CommentPost.map((comment) => ({
+            id: comment.id,
+            content: comment.content,
+            user: {
+              username: comment.user.username,
+              email: comment.user.email,
+            },
+          })),
           created_at: post.created_at,
           updated_at: post.updated_at,
         },
@@ -173,4 +188,46 @@ export class PostsService {
 
     return { status: true };
   }
+
+  async commentPosts(postId: number, userId: number, content: string) {
+    const [user, post] = await Promise.all([
+      this.Db.user.findUnique({ where: { id: userId } }),
+      this.Db.post.findUnique({ where: { id: postId } }),
+    ]);
+
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+
+    if (!post) {
+      throw new HttpException('Post not found', HttpStatus.NOT_FOUND);
+    }
+
+    try {
+      await this.Db.commentPost.create({
+        data: {
+          content,
+          user: { connect: { id: userId } },
+          post: { connect: { id: postId } },
+        },
+      });
+    } catch (error) {
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
+    return { status: true };
+  }
+
+  //async sendEmailLike(data: any) {
+  //  try {
+  //    const result = await this.client.send('email', data).toPromise();
+  //    return result;
+  //  } catch (error) {
+  //    Logger.log(error);
+  //    throw new error();
+  //  }
+  //}
 }

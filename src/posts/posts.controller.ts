@@ -11,10 +11,14 @@ import {
   NotFoundException,
   ConflictException,
   HttpException,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
-import { CreatePostsDto } from './dto/posts.dto';
+import { CommentPostDto, CreatePostsDto } from './dto/posts.dto';
 import { Prisma } from '@prisma/client';
+import { Request } from 'express';
+import { JwtAuthGuard } from 'src/middleware/jwt.guard';
 
 @Controller('api/posts')
 export class PostsController {
@@ -115,19 +119,14 @@ export class PostsController {
     }
   }
 
-  @Post(':id/like')
+  @Get(':id/like')
   @HttpCode(HttpStatus.OK)
-  async likePost(
-    @Param('id') postId: string,
-    @Body('userId') userId: number
-  ) {
+  @UseGuards(JwtAuthGuard)
+  async likePost(@Param('id') postId: string, @Req() request: Request) {
+    const user = request.user;
     try {
-      await this.postsService.likePosts(+postId, userId);
-      return {
-        status: true,
-        statusCode: HttpStatus.OK,
-        message: 'Post liked successfully',
-      };
+      const result = await this.postsService.likePosts(+postId, user.id);
+      return { data: result };
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw new NotFoundException(error.message);
@@ -138,4 +137,36 @@ export class PostsController {
       );
     }
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/comment')
+  @HttpCode(HttpStatus.OK)
+  async commentPosts(
+    @Param('id') postId: string,
+    @Req() request: Request,
+    commentDto: CommentPostDto,
+  ) {
+    const user = request.user;
+    try {
+      const result = await this.postsService.commentPosts(
+        +postId,
+        user.id,
+        commentDto.content,
+      );
+      return result;
+    } catch (error) {
+      throw new error();
+    }
+  }
+
+  //@Post('test')
+  //@MessagePattern("email")
+  //handleTest() {
+  //  const data = {
+  //    id: 1,
+  //    email: "rafia9005@gmail.com",
+  //    message: "hello world"
+  //  }
+  //  Logger.log(this.postsService.sendEmailLike(data))
+  //}
 }

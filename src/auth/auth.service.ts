@@ -1,36 +1,48 @@
 import {
-  ConflictException,
   Injectable,
-  NotFoundException,
+  ConflictException,
   UnauthorizedException,
+  NotFoundException,
 } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
-import { JwtService } from '@nestjs/jwt';
-import { AuthEntity, RegisterResponse, UserResponse } from './entity/auth.entity';
 import { DatabaseService } from 'src/database/database.service';
+import { JwtService } from '@nestjs/jwt';
+import { AuthEntity, RegisterResponse } from './entity/auth.entity';
+import * as bcrypt from 'bcrypt';
+import { UserResponse } from './entity/auth.entity';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly dbService: DatabaseService,
+    private readonly databaseService: DatabaseService,
     private readonly jwtService: JwtService,
   ) {}
 
   async login(username: string, password: string): Promise<AuthEntity> {
-    const user = await this.findUserByUsername(username);
+    if (!username) {
+      throw new NotFoundException('Email must be provided');
+    }
+
+    const user = await this.databaseService.user.findUnique({
+      where: { username: username },
+    });
 
     if (!user) {
       throw new NotFoundException(`No user found for username: ${username}`);
     }
 
-    const isPasswordValid = await this.validatePassword(password, user.password);
+    const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid password');
     }
 
-    const token = this.generateToken(user);
-    return { token };
+    return {
+      token: this.jwtService.sign({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+      }),
+    };
   }
 
   async register(
@@ -38,93 +50,38 @@ export class AuthService {
     email: string,
     password: string,
   ): Promise<RegisterResponse> {
-    await this.ensureUserDoesNotExist(username, email);
+    if (!email) {
+      throw new ConflictException('Email must be provided');
+    }
 
-    const hashedPassword = await this.hashPassword(password);
+    const existingUser = await this.databaseService.user.findUnique({
+      where: { email: email },
+    });
 
-    const newUser = await this.createUser(username, email, hashedPassword);
+    if (existingUser) {
+      throw new ConflictException('Email already in use');
+    }
 
-    // Uncomment and implement if needed
-    // const verifyToken = this.generateVerificationToken();
-    // await this.dbService.verifyToken.create({ data: { token: verifyToken, usersId: newUser.id } });
-    // await this.emailService.sendVerificationEmail(newUser.email, verifyToken);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    const userResponse = this.createUserResponse(newUser);
-    const accessToken = this.generateToken(newUser);
+    const newUser = await this.databaseService.user.create({
+      data: {
+        username: username,
+        email: email,
+        password: hashedPassword,
+      },
+    });
+
+    const userResponse: UserResponse = {
+      id: newUser.id,
+      username: newUser.username,
+      email: newUser.email,
+    };
 
     return {
       status: true,
-      message: 'Registration successful',
-      token: accessToken,
+      message: `Registration successful. Please check your email to verify your account. ${newUser.email}`,
       data: userResponse,
     };
   }
-
-  private async findUserByUsername(username: string) {
-    return this.dbService.user.findUnique({ where: { username } });
-  }
-
-  private async validatePassword(
-    plainTextPassword: string,
-    hashedPassword: string,
-  ): Promise<boolean> {
-    return bcrypt.compare(plainTextPassword, hashedPassword);
-  }
-
-  private async ensureUserDoesNotExist(
-    username: string,
-    email: string,
-  ): Promise<void> {
-    const [existingUsername, existingEmail] = await Promise.all([
-      this.dbService.user.findUnique({ where: { username } }),
-      this.dbService.user.findUnique({ where: { email } }),
-    ]);
-
-    if (existingUsername || existingEmail) {
-      throw new ConflictException('Email or Username already in use');
-    }
-  }
-
-  private async createUser(username: string, email: string, password: string) {
-    return this.dbService.user.create({
-      data: {
-        username,
-        email,
-        password,
-      },
-    });
-  }
-
-  private createUserResponse(user: any): UserResponse {
-    return {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
-  }
-
-  private generateToken(user: any): string {
-    const payload = {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-    };
-    return this.jwtService.sign(payload);
-  }
-
-  private async hashPassword(password: string): Promise<string> {
-    return bcrypt.hash(password, 10);
-  }
-
-  // Uncomment and implement if needed
-  // private generateVerificationToken(): string {
-  //   return this.jwtService.sign({ id: user.id }, { expiresIn: '1d' });
-  // }
-
-  private decodeToken(token: string): any {
-    return this.jwtService.decode(token);
-  }
 }
-

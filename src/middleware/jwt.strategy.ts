@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { jwtSecret } from '../auth/auth.module';
+import { jwtSecret } from '../auth/auth.module'; // Pastikan path ini benar
 import { DatabaseService } from 'src/database/database.service';
 
 export interface JwtPayload {
