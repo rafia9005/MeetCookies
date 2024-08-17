@@ -119,10 +119,7 @@ export class PostsController {
 
   @Post(':id/like')
   @HttpCode(HttpStatus.OK)
-  async likePost(
-    @Param('id') postId: string,
-    @Body('userId') userId: number
-  ) {
+  async likePost(@Param('id') postId: string, @Body('userId') userId: number) {
     try {
       await this.postsService.likePosts(+postId, userId);
       return {

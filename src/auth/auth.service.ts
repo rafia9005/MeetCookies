@@ -6,7 +6,11 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { AuthEntity, RegisterResponse, UserResponse } from './entity/auth.entity';
+import {
+  AuthEntity,
+  RegisterResponse,
+  UserResponse,
+} from './entity/auth.entity';
 import { DatabaseService } from 'src/database/database.service';
 
 @Injectable()
@@ -23,7 +27,10 @@ export class AuthService {
       throw new NotFoundException(`No user found for username: ${username}`);
     }
 
-    const isPasswordValid = await this.validatePassword(password, user.password);
+    const isPasswordValid = await this.validatePassword(
+      password,
+      user.password,
+    );
 
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid password');
@@ -127,4 +134,3 @@ export class AuthService {
     return this.jwtService.decode(token);
   }
 }
-
