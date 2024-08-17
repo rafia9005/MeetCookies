@@ -12,8 +12,8 @@ export class RegisterResponse {
   @ApiProperty()
   message: string;
 
-  @ApiProperty()
-  token: string;
+  //@ApiProperty()
+  //token: string;
 
   @ApiProperty()
   data: object;
@@ -23,6 +23,6 @@ export interface UserResponse {
   id: number;
   username: string;
   email: string;
-  createdAt: Date;
-  updatedAt: Date;
+  //createdAt: Date;
+  //updatedAt: Date;
 }
