@@ -26,9 +26,11 @@ export class PostsController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() createPostDto: CreatePostsDto) {
+  @UseGuards(JwtAuthGuard)
+  async create(@Body() createPostDto: CreatePostsDto, @Req() req: Request) {
+    const user = req.user;
     try {
-      const result = await this.postsService.create(createPostDto);
+      const result = await this.postsService.create(+user.id, createPostDto);
       return {
         status: true,
         statusCode: HttpStatus.CREATED,
@@ -82,12 +84,19 @@ export class PostsController {
 
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
   async update(
     @Param('id') id: string,
+    @Req() req: Request,
     @Body() updatePostDto: Prisma.PostUpdateInput,
   ) {
+    const user = req.user;
     try {
-      const result = await this.postsService.update(+id, updatePostDto);
+      const result = await this.postsService.update(
+        +id,
+        +user.id,
+        updatePostDto,
+      );
       return {
         status: true,
         statusCode: HttpStatus.OK,
@@ -103,9 +112,10 @@ export class PostsController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@Param('id') id: string) {
+  async remove(@Param('id') id: string, @Req() req: Request) {
+    const user = req.user;
     try {
-      await this.postsService.remove(+id);
+      await this.postsService.remove(+id, +user.id);
       return {
         status: true,
         statusCode: HttpStatus.NO_CONTENT,
@@ -138,28 +148,26 @@ export class PostsController {
     }
   }
 
-
-@UseGuards(JwtAuthGuard)
-@Post(':id/comment')
-@HttpCode(HttpStatus.OK)
-async commentPosts(
-  @Param('id') postId: string,
-  @Req() request: Request,
-  @Body() commentDto: CommentPostDto,
-) {
-  const user = request.user;
-  try {
-    const result = await this.postsService.commentPosts(
-      +postId,
-      user.id,
-      commentDto.content,
-    );
-    return result;
-  } catch (error) {
-    throw error;
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/comment')
+  @HttpCode(HttpStatus.OK)
+  async commentPosts(
+    @Param('id') postId: string,
+    @Req() request: Request,
+    @Body() commentDto: CommentPostDto,
+  ) {
+    const user = request.user;
+    try {
+      const result = await this.postsService.commentPosts(
+        +postId,
+        user.id,
+        commentDto.content,
+      );
+      return result;
+    } catch (error) {
+      throw error;
+    }
   }
-}
-
 
   //@Post('test')
   //@MessagePattern("email")
