@@ -15,8 +15,20 @@ model User {
   token       String?
   LikePost    LikePost[]
   CommentPost CommentPost[]
+  Contact     Contact?
 
   @@map("users")
+}
+
+model Contact {
+  id      Int     @id @default(autoincrement())
+  name    String?
+  bio     String? @db.Text
+  avatar  String?
+  contact User    @relation(fields: [users], references: [id])
+  users   Int     @unique
+
+  @@map("contacts")
 }
 
 model Post {
@@ -31,22 +43,26 @@ model Post {
 }
 
 model LikePost {
-  id    Int  @id @default(autoincrement())
-  user  User @relation(fields: [users], references: [id])
-  users Int
-  post  Post @relation(fields: [posts], references: [id])
-  posts Int
+  id         Int      @id @default(autoincrement())
+  user       User     @relation(fields: [users], references: [id])
+  users      Int
+  post       Post     @relation(fields: [posts], references: [id])
+  posts      Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   @@map("like_posts")
 }
 
 model CommentPost {
-  id      Int    @id @default(autoincrement())
-  content String @db.Text()
-  user    User   @relation(fields: [users], references: [id])
-  users   Int
-  post    Post   @relation(fields: [posts], references: [id])
-  posts   Int
+  id         Int      @id @default(autoincrement())
+  content    String   @db.Text()
+  user       User     @relation(fields: [users], references: [id])
+  users      Int
+  post       Post     @relation(fields: [posts], references: [id])
+  posts      Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   @@map("comment_posts")
 }

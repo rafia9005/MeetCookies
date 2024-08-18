@@ -1,24 +1,22 @@
-import { Controller, Get, Req, UseGuards, HttpCode } from '@nestjs/common';
+import { Body, Controller, Patch, Req, UseGuards } from '@nestjs/common';
+import { UsersService } from './users.service';
 import { Request } from 'express';
-import { DatabaseService } from 'src/database/database.service';
-import { JwtPayload } from 'src/middleware/jwt.strategy';
 import { JwtAuthGuard } from 'src/middleware/jwt.guard';
+import { updateUserDto } from './dto/users.dto';
 
-@Controller('users')
+@Controller('api/users')
 export class UsersController {
-  constructor(private readonly Db: DatabaseService) {}
-
-  @Get('/profile')
-  @HttpCode(200)
+  constructor(private readonly usersService: UsersService) {}
+  @Patch('update')
   @UseGuards(JwtAuthGuard)
-  getProfile(@Req() request: Request): { data: JwtPayload } {
-    const user = request.user as JwtPayload;
-    return {
-      data: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-      },
-    };
+  update(@Req() req: Request, @Body() updateDto: updateUserDto) {
+    const user = req.user;
+
+    return this.usersService.update(
+      user.id,
+      user.username,
+      user.email,
+      updateDto,
+    );
   }
 }

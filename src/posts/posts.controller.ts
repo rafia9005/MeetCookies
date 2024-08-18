@@ -126,7 +126,7 @@ export class PostsController {
     const user = request.user;
     try {
       const result = await this.postsService.likePosts(+postId, user.id);
-      return { data: result };
+      return result;
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw new NotFoundException(error.message);
@@ -138,26 +138,28 @@ export class PostsController {
     }
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Post(':id/comment')
-  @HttpCode(HttpStatus.OK)
-  async commentPosts(
-    @Param('id') postId: string,
-    @Req() request: Request,
-    commentDto: CommentPostDto,
-  ) {
-    const user = request.user;
-    try {
-      const result = await this.postsService.commentPosts(
-        +postId,
-        user.id,
-        commentDto.content,
-      );
-      return result;
-    } catch (error) {
-      throw new error();
-    }
+
+@UseGuards(JwtAuthGuard)
+@Post(':id/comment')
+@HttpCode(HttpStatus.OK)
+async commentPosts(
+  @Param('id') postId: string,
+  @Req() request: Request,
+  @Body() commentDto: CommentPostDto,
+) {
+  const user = request.user;
+  try {
+    const result = await this.postsService.commentPosts(
+      +postId,
+      user.id,
+      commentDto.content,
+    );
+    return result;
+  } catch (error) {
+    throw error;
   }
+}
+
 
   //@Post('test')
   //@MessagePattern("email")
