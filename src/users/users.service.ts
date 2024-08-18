@@ -10,7 +10,19 @@ export class UsersService {
     try {
       const user = await this.Db.user.findUnique({
         where: { id, username, email },
-        include: { Contact: true },
+        include: {
+          Contact: true,
+          Post: {
+            include: {
+              _count: {
+                select: {
+                  LikePost: true,
+                  CommentPost: true,
+                },
+              },
+            },
+          },
+        },
       });
 
       if (!user) {
@@ -27,10 +39,16 @@ export class UsersService {
           username: user.username,
           email: user.email,
           contact: {
-            name: user.Contact.name,
-            bio: user.Contact.bio,
-            avatar: user.Contact.avatar,
+            name: user.Contact?.name,
+            bio: user.Contact?.bio,
+            avatar: user.Contact?.avatar,
           },
+          posts: user.Post.map((post) => ({
+            id: post.id,
+            content: post.content,
+            like: post._count.LikePost,
+            comment: post._count.CommentPost,
+          })),
         },
       };
     } catch (error) {
