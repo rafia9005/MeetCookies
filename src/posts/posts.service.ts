@@ -2,6 +2,7 @@ import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { Prisma } from '@prisma/client';
 import { DatabaseService } from 'src/database/database.service';
+import { CreatePostsDto } from './dto/posts.dto';
 
 @Injectable()
 export class PostsService {
@@ -10,10 +11,13 @@ export class PostsService {
     @Inject('EMAIL_SERVICE') private readonly client: ClientProxy,
   ) {}
 
-  async create(createPostDto: Prisma.PostCreateInput) {
+  async create(userId: number, createPostDto: CreatePostsDto) {
     try {
       const post = await this.Db.post.create({
-        data: createPostDto,
+        data: {
+          ...createPostDto,
+          user: { connect: { id: userId } },
+        },
         include: {
           LikePost: true,
           CommentPost: true,
@@ -21,7 +25,6 @@ export class PostsService {
       });
       return {
         status: true,
-        statusCode: HttpStatus.CREATED,
         data: post,
       };
     } catch (error) {
@@ -52,15 +55,19 @@ export class PostsService {
               CommentPost: true,
             },
           },
+          user: true,
         },
       });
 
       return {
         status: true,
-        statusCode: HttpStatus.OK,
         data: posts.map((post) => ({
           id: post.id,
           content: post.content,
+          user: {
+            username: post.user.username,
+            email: post.user.email,
+          },
           like: post._count.LikePost,
           comment: post._count.CommentPost,
           created_at: post.created_at,
@@ -91,6 +98,7 @@ export class PostsService {
               user: true,
             },
           },
+          user: true,
         },
       });
 
@@ -100,10 +108,13 @@ export class PostsService {
 
       return {
         status: true,
-        statusCode: HttpStatus.OK,
         data: {
           id: post.id,
           content: post.content,
+          user: {
+            username: post.user.username,
+            email: post.user.email,
+          },
           like: post._count.LikePost,
           comment: post._count.CommentPost,
           all_comment: post.CommentPost.map((comment) => ({
@@ -113,6 +124,8 @@ export class PostsService {
               username: comment.user.username,
               email: comment.user.email,
             },
+            created_at: comment.created_at,
+            updated_at: comment.updated_at,
           })),
           created_at: post.created_at,
           updated_at: post.updated_at,
@@ -126,8 +139,27 @@ export class PostsService {
     }
   }
 
-  async update(id: number, updatePostDto: Prisma.PostUpdateInput) {
+  async update(
+    id: number,
+    userId: number,
+    updatePostDto: Prisma.PostUpdateInput,
+  ) {
     try {
+      const post = await this.Db.post.findUnique({
+        where: { id },
+      });
+
+      if (!post) {
+        throw new HttpException('Post not found', HttpStatus.NOT_FOUND);
+      }
+
+      if (post.users !== userId) {
+        throw new HttpException(
+          'You are not authorized to update this post',
+          HttpStatus.FORBIDDEN,
+        );
+      }
+
       const updatedPost = await this.Db.post.update({
         where: { id },
         data: updatePostDto,
@@ -135,7 +167,6 @@ export class PostsService {
 
       return {
         status: true,
-        statusCode: HttpStatus.OK,
         data: updatedPost,
       };
     } catch (error) {
@@ -146,15 +177,29 @@ export class PostsService {
     }
   }
 
-  async remove(id: number) {
+  async remove(id: number, userId: number) {
     try {
+      const post = await this.Db.post.findUnique({
+        where: { id },
+      });
+
+      if (!post) {
+        throw new HttpException('Post not found', HttpStatus.NOT_FOUND);
+      }
+
+      if (post.users !== userId) {
+        throw new HttpException(
+          'You are not authorized to delete this post',
+          HttpStatus.FORBIDDEN,
+        );
+      }
+
       await this.Db.post.delete({
         where: { id },
       });
 
       return {
         status: true,
-        statusCode: HttpStatus.NO_CONTENT,
         message: 'Post successfully deleted',
       };
     } catch (error) {
@@ -211,6 +256,8 @@ export class PostsService {
           post: { connect: { id: postId } },
         },
       });
+
+      return { status: true };
     } catch (error) {
       throw new HttpException(
         'Internal Server Error',
