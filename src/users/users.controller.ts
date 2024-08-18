@@ -1,19 +1,22 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Body, Controller, Get, Patch, Req, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
+import { Request } from 'express';
+import { JwtAuthGuard } from 'src/middleware/jwt.guard';
+import { updateUserDto } from './dto/users.dto';
 
-@Controller('users')
+@Controller('api/users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  @Patch('update')
+  @UseGuards(JwtAuthGuard)
+  update(@Req() req: Request, @Body() updateDto: updateUserDto) {
+    const user = req.user;
+
+    return this.usersService.update(
+      user.id,
+      user.username,
+      user.email,
+      updateDto,
+    );
   }
 }

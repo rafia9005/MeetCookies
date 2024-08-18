@@ -15,8 +15,20 @@ model User {
   token       String?
   LikePost    LikePost[]
   CommentPost CommentPost[]
+  Contact     Contact?
 
   @@map("users")
+}
+
+model Contact {
+  id      Int     @id @default(autoincrement())
+  name    String?
+  bio     String? @db.Text
+  avatar  String?
+  contact User    @relation(fields: [users], references: [id])
+  users   Int     @unique
+
+  @@map("contacts")
 }
 
 model Post {
