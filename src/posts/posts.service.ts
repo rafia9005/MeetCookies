@@ -113,6 +113,8 @@ export class PostsService {
               username: comment.user.username,
               email: comment.user.email,
             },
+            created_at: comment.created_at,
+            updated_at: comment.updated_at
           })),
           created_at: post.created_at,
           updated_at: post.updated_at,
