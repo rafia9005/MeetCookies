@@ -21,7 +21,6 @@ export class PostsService {
       });
       return {
         status: true,
-        statusCode: HttpStatus.CREATED,
         data: post,
       };
     } catch (error) {
@@ -57,7 +56,6 @@ export class PostsService {
 
       return {
         status: true,
-        statusCode: HttpStatus.OK,
         data: posts.map((post) => ({
           id: post.id,
           content: post.content,
@@ -100,7 +98,6 @@ export class PostsService {
 
       return {
         status: true,
-        statusCode: HttpStatus.OK,
         data: {
           id: post.id,
           content: post.content,
@@ -137,7 +134,6 @@ export class PostsService {
 
       return {
         status: true,
-        statusCode: HttpStatus.OK,
         data: updatedPost,
       };
     } catch (error) {
@@ -156,7 +152,6 @@ export class PostsService {
 
       return {
         status: true,
-        statusCode: HttpStatus.NO_CONTENT,
         message: 'Post successfully deleted',
       };
     } catch (error) {
@@ -213,6 +208,8 @@ export class PostsService {
           post: { connect: { id: postId } },
         },
       });
+
+      return {status: true};
     } catch (error) {
       throw new HttpException(
         'Internal Server Error',

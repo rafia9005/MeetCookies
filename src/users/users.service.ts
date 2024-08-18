@@ -6,6 +6,41 @@ import { updateUserDto } from './dto/users.dto';
 export class UsersService {
   constructor(private readonly Db: DatabaseService) {}
 
+  async get(id: number, username: string, email: string) {
+    try {
+      const user = await this.Db.user.findUnique({
+        where: { id, username, email },
+        include: { Contact: true },
+      });
+
+      if (!user) {
+        return {
+          status: false,
+          statusCode: 404,
+          message: 'User not found',
+        };
+      }
+
+      return {
+        status: true,
+        data: {
+          username: user.username,
+          email: user.email,
+          contact: {
+            name: user.Contact.name,
+            bio: user.Contact.bio,
+            avatar: user.Contact.avatar,
+          },
+        },
+      };
+    } catch (error) {
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
   async update(
     idAuth: number,
     usernameAuth: string,
@@ -20,9 +55,7 @@ export class UsersService {
         username: usernameAuth,
         email: emailAuth,
       },
-      include: {
-        Contact: true,
-      },
+      include: { Contact: true },
     });
 
     if (!user) {
@@ -31,9 +64,7 @@ export class UsersService {
 
     try {
       await this.Db.user.update({
-        where: {
-          id: idAuth,
-        },
+        where: { id: idAuth },
         data: {
           username: username ?? user.username,
           email: email ?? user.email,
@@ -43,9 +74,7 @@ export class UsersService {
 
       if (name || bio || avatar) {
         await this.Db.contact.upsert({
-          where: {
-            users: idAuth,
-          },
+          where: { users: idAuth },
           update: {
             name: name ?? user.Contact?.name,
             bio: bio ?? user.Contact?.bio,
@@ -61,12 +90,8 @@ export class UsersService {
       }
 
       const result = await this.Db.user.findUnique({
-        where: {
-          id: idAuth,
-        },
-        include: {
-          Contact: true,
-        },
+        where: { id: idAuth },
+        include: { Contact: true },
       });
 
       return {
