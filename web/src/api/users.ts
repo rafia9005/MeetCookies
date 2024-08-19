@@ -1,19 +1,18 @@
 import { JWT_TOKEN } from '../lib/token';
 import { API_URL } from '../config/config';
 
-async function get() {
+export const getProfile = async () =>  {
   authCheck(JWT_TOKEN);
   try {
-    const result = fetch(`${API_URL}/users`, {
+    const result = await fetch(`${API_URL}/users`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${JWT_TOKEN}`,
       },
     });
-    return result;
+   return result.json();
   } catch (error) {
     return error;
   }
 }
 
-export { get };
