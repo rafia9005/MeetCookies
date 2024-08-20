@@ -55,28 +55,10 @@
 </script>
 
 {#if loading}
-  <div
-    class="border border-blue-300 rounded-md p-4 max-w-lg w-full mx-auto mt-5 h-[95vh]"
-  >
-    <div class="animate-pulse flex space-x-4">
-      <!-- Avatar Placeholder -->
-      <div class="rounded-full bg-slate-700 h-12 w-12"></div>
-      <div class="flex-1 space-y-4 py-1">
-        <!-- Username Placeholder -->
-        <div class="h-4 bg-slate-700 rounded w-3/4"></div>
-        <!-- Date Placeholder -->
-        <div class="h-3 bg-slate-700 rounded w-1/4"></div>
-        <!-- Content Placeholder -->
-        <div class="h-4 bg-slate-700 rounded"></div>
-        <div class="h-4 bg-slate-700 rounded w-5/6"></div>
-        <div class="h-4 bg-slate-700 rounded w-4/5"></div>
-        <!-- Likes and Comments Placeholder -->
-        <div class="flex space-x-4 mt-4">
-          <div class="h-3 bg-slate-700 rounded w-1/3"></div>
-          <div class="h-3 bg-slate-700 rounded w-1/4"></div>
-        </div>
-      </div>
-    </div>
+  <div class="flex justify-center items-center min-h-screen bg-gray-900">
+    <div
+      class="w-16 h-16 border-4 border-t-4 border-blue-500 border-solid rounded-full animate-spin"
+    ></div>
   </div>
 {:else if error}
   <div class="text-center py-20 text-red-500">
