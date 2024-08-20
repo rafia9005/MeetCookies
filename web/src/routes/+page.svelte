@@ -7,7 +7,7 @@
     <h1
       class="text-5xl font-extrabold text-purple-500 mb-12 text-center leading-tight"
     >
-      MeetPookie
+      MeetCookies
     </h1>
     <!-- post list -->
     <PostList />

@@ -20,6 +20,7 @@
 
   let posts: Post[] = [];
   let error: string | null = null;
+  let intervalId: number | null = null;
 
   async function fetchPosts() {
     try {
@@ -43,10 +44,13 @@
 
   onMount(() => {
     fetchPosts();
-    const intervalId = setInterval(fetchPosts, 5000);
-    onDestroy(() => {
+    intervalId = setInterval(fetchPosts, 5000);
+  });
+
+  onDestroy(() => {
+    if (intervalId) {
       clearInterval(intervalId);
-    });
+    }
   });
 </script>
 
