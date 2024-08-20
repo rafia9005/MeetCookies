@@ -22,8 +22,9 @@
   }
 </script>
 
-<div
-  class="bg-gray-800 p-8 mb-8 rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300 mx-4 md:mx-10"
+<a
+  href={`/posts/${post.user.username}/${post.id}`}
+  class="block bg-gray-800 p-8 mb-8 rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300 mx-4 md:mx-10"
 >
   <div class="flex items-center mb-4">
     <div
@@ -75,4 +76,4 @@
       {post.comment} Comments
     </span>
   </div>
-</div>
+</a>
