@@ -1,4 +1,4 @@
-import { API_URL } from '../config/config';
+import { accessToken, API_URL } from '../config/config';
 
 export async function getPosts() {
   try {
@@ -23,5 +23,21 @@ export async function getPostsById(id: number) {
   } catch (error) {
     console.error(error);
     return error;
+  }
+}
+
+export async function deleteById(id: number) {
+  try {
+    const result = await fetch(`${API_URL}/posts/${id}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    return result.json();
+  } catch (error) {
+    return {
+      data: [],
+    };
   }
 }
