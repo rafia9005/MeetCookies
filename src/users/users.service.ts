@@ -48,6 +48,8 @@ export class UsersService {
             content: post.content,
             like: post._count.LikePost,
             comment: post._count.CommentPost,
+            created_at: post.created_at,
+            updated_at: post.updated_at,
           })),
         },
       };
